@@ -4,7 +4,10 @@ import { useEffect, useState, useCallback } from 'react';
 import SystemOverview from './SystemOverview';
 import ProcessSection from './ProcessSection';
 import ProjectSection from './ProjectSection';
-import type { SystemMetrics, ProcessesResponse } from '@/types';
+import DatabaseSizesCard from './DatabaseSizesCard';
+import CronLogsCard from './CronLogsCard';
+import BackupDownloadCard from './BackupDownloadCard';
+import type { SystemMetrics, ProcessesResponse, DbSizesResponse } from '@/types';
 
 const REFRESH_INTERVAL_MS = 10_000;
 
@@ -16,6 +19,10 @@ export default function Dashboard() {
   const [processData, setProcessData] = useState<ProcessesResponse | null>(null);
   const [processError, setProcessError] = useState<string | null>(null);
   const [processLoading, setProcessLoading] = useState(true);
+
+  const [dbSizesData, setDbSizesData] = useState<DbSizesResponse | null>(null);
+  const [dbSizesError, setDbSizesError] = useState<string | null>(null);
+  const [dbSizesLoading, setDbSizesLoading] = useState(true);
 
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
@@ -54,17 +61,36 @@ export default function Dashboard() {
     }
   }, []);
 
+  const fetchDbSizes = useCallback(async () => {
+    try {
+      const res = await fetch('/api/monitor/db-sizes');
+      const json = await res.json();
+      if (!res.ok) {
+        setDbSizesError(json.error ?? 'Failed to load database sizes');
+      } else {
+        setDbSizesData(json);
+        setDbSizesError(null);
+      }
+    } catch {
+      setDbSizesError('Network error — cannot reach server');
+    } finally {
+      setDbSizesLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchSystem();
     fetchProcesses();
+    fetchDbSizes();
 
     const interval = setInterval(() => {
       fetchSystem();
       fetchProcesses();
+      fetchDbSizes();
     }, REFRESH_INTERVAL_MS);
 
     return () => clearInterval(interval);
-  }, [fetchSystem, fetchProcesses]);
+  }, [fetchSystem, fetchProcesses, fetchDbSizes]);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 flex flex-col gap-8">
@@ -77,7 +103,7 @@ export default function Dashboard() {
           </p>
         </div>
         <button
-          onClick={() => { fetchSystem(); fetchProcesses(); }}
+          onClick={() => { fetchSystem(); fetchProcesses(); fetchDbSizes(); }}
           className="px-3 py-1.5 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
         >
           Refresh now
@@ -97,6 +123,16 @@ export default function Dashboard() {
       />
 
       <ProjectSection />
+
+      <DatabaseSizesCard
+        data={dbSizesData}
+        loading={dbSizesLoading}
+        error={dbSizesError}
+      />
+
+      <CronLogsCard />
+
+      <BackupDownloadCard />
     </div>
   );
 }

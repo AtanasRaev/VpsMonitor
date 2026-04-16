@@ -82,3 +82,31 @@ export interface ProcessesResponse {
 export interface ApiError {
   error: string;
 }
+
+// ── Database sizes ────────────────────────────────────────────────────────────
+
+export interface DbSizeInfo {
+  datname: string;
+  sizeBytes: number;
+  sizePretty: string;
+}
+
+export interface DbSizesResponse {
+  databases: DbSizeInfo[];
+}
+
+// ── Cron logs ─────────────────────────────────────────────────────────────────
+
+export interface CronLogsResponse {
+  lines: string[];
+  source: string;
+}
+
+// ── Backup info ───────────────────────────────────────────────────────────────
+
+export interface BackupInfo {
+  filename: string;
+  sizeBytes: number;
+  sizePretty: string;
+  lastModified: string; // ISO date string
+}
