@@ -35,8 +35,11 @@ export default function DatabaseSizesCard({ data, loading, error }: DatabaseSize
               <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 {db.datname}
               </span>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-2xl font-bold text-gray-800 tabular-nums">{db.sizePretty}</span>
+              <div className="flex items-baseline gap-1 mt-1">
+                <span className="text-2xl font-bold text-gray-800 tabular-nums">
+                  {(db.sizeBytes / (1024 * 1024)).toFixed(1)}
+                </span>
+                <span className="text-sm text-gray-500">MB</span>
               </div>
               <span className="text-xs text-gray-400">{db.sizeBytes.toLocaleString()} bytes</span>
             </div>

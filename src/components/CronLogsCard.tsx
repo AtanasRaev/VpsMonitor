@@ -9,6 +9,49 @@ type LogState =
   | { status: 'error'; message: string }
   | { status: 'done'; data: CronLogsResponse };
 
+type ParsedEntry =
+  | { type: 'header'; timestamp: string; label: string }
+  | { type: 'json'; pretty: string; skipped: boolean }
+  | { type: 'text'; content: string };
+
+const CURL_NOISE = [/--:--:--/, /% Total/, /Dload/, /^\s*\d+\s+\d+\s+\d+\s+\d+\s+\d+\s+\d+/];
+
+function isCurlNoise(line: string): boolean {
+  return CURL_NOISE.some((re) => re.test(line));
+}
+
+function parseCronLines(lines: string[]): ParsedEntry[] {
+  const entries: ParsedEntry[] = [];
+
+  for (const raw of lines) {
+    const line = raw.trimEnd();
+
+    if (!line.trim() || isCurlNoise(line)) continue;
+
+    const headerMatch = line.match(/^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]\s+(.+)$/);
+    if (headerMatch) {
+      entries.push({ type: 'header', timestamp: headerMatch[1], label: headerMatch[2] });
+      continue;
+    }
+
+    if (line.trimStart().startsWith('{')) {
+      try {
+        const parsed = JSON.parse(line.trim());
+        const { skipped, reason, nowIso, ...rest } = parsed;
+        const summary = { skipped, reason, nowIso, ...rest };
+        entries.push({ type: 'json', pretty: JSON.stringify(summary, null, 2), skipped: !!skipped });
+      } catch {
+        entries.push({ type: 'text', content: line });
+      }
+      continue;
+    }
+
+    entries.push({ type: 'text', content: line });
+  }
+
+  return entries;
+}
+
 export default function CronLogsCard() {
   const [logState, setLogState] = useState<LogState>({ status: 'idle' });
 
@@ -69,14 +112,41 @@ export default function CronLogsCard() {
           <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">{logState.message}</p>
         )}
 
-        {logState.status === 'done' && (
-          <div>
-            <p className="text-xs text-gray-400 mb-2 font-mono">{logState.data.source} · last {logState.data.lines.length} lines</p>
-            <pre className="max-h-64 overflow-y-auto font-mono text-xs bg-gray-950 text-green-400 rounded-lg p-3 whitespace-pre-wrap break-all">
-              {logState.data.lines.join('\n') || '(empty)'}
-            </pre>
-          </div>
-        )}
+        {logState.status === 'done' && (() => {
+          const entries = parseCronLines(logState.data.lines);
+          return (
+            <div>
+              <p className="text-xs text-gray-400 mb-2 font-mono">
+                {logState.data.source} · last {logState.data.lines.length} lines
+              </p>
+              <div className="max-h-96 overflow-y-auto rounded-lg bg-gray-950 p-3 flex flex-col gap-1">
+                {entries.length === 0 && (
+                  <span className="text-xs text-gray-500 font-mono">(empty)</span>
+                )}
+                {entries.map((entry, i) => {
+                  if (entry.type === 'header') {
+                    return (
+                      <div key={i} className="flex items-center gap-2 mt-2 first:mt-0">
+                        <span className="text-xs text-gray-500 font-mono shrink-0">{entry.timestamp}</span>
+                        <span className="text-xs font-semibold text-yellow-400 uppercase tracking-wide">{entry.label}</span>
+                      </div>
+                    );
+                  }
+                  if (entry.type === 'json') {
+                    return (
+                      <pre key={i} className={`text-xs font-mono whitespace-pre-wrap break-all pl-2 border-l-2 ${entry.skipped ? 'border-gray-600 text-gray-400' : 'border-green-600 text-green-300'}`}>
+                        {entry.pretty}
+                      </pre>
+                    );
+                  }
+                  return (
+                    <span key={i} className="text-xs font-mono text-gray-400">{entry.content}</span>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </section>
   );
