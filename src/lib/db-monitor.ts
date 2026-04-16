@@ -9,7 +9,7 @@ WHERE datname IN ('checkin_db', 'myteam_db');
 
 export async function getDbSizes(): Promise<DbSizesResponse> {
   const output = await runCommand(
-    `psql -U postgres -t -A -F'|' -c "${QUERY}"`
+    `sudo -u postgres psql -t -A -F'|' -c "${QUERY}"`
   );
 
   const databases = output
