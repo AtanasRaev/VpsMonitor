@@ -3,5 +3,59 @@
 @tailwind utilities;
 
 body {
-  @apply bg-gray-100 text-gray-900 min-h-screen;
+  @apply min-h-screen;
+  background-color: #020617;
+  color: #e2e8f0;
+  color-scheme: dark;
+}
+
+/* Global dark theme remap for existing utility classes */
+.bg-white {
+  background-color: #0f172a !important;
+}
+
+.bg-gray-50 {
+  background-color: #111827 !important;
+}
+
+.bg-gray-100 {
+  background-color: #1f2937 !important;
+}
+
+.bg-gray-200 {
+  background-color: #334155 !important;
+}
+
+.border-gray-50 {
+  border-color: #1f2937 !important;
+}
+
+.border-gray-100 {
+  border-color: #334155 !important;
+}
+
+.border-gray-200 {
+  border-color: #334155 !important;
+}
+
+.text-gray-900,
+.text-gray-800 {
+  color: #e2e8f0 !important;
+}
+
+.text-gray-700,
+.text-gray-600 {
+  color: #cbd5e1 !important;
+}
+
+.text-gray-500 {
+  color: #94a3b8 !important;
+}
+
+.text-gray-400 {
+  color: #64748b !important;
+}
+
+.hover\:bg-gray-200:hover {
+  background-color: #475569 !important;
 }
