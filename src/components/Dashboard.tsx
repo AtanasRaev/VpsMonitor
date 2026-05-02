@@ -94,13 +94,20 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 flex flex-col gap-8">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">VPS Monitor</h1>
-          <p className="text-xs text-gray-400 mt-0.5">
-            Auto-refreshes every {REFRESH_INTERVAL_MS / 1000}s
-            {lastUpdated && ` · last updated ${lastUpdated.toLocaleTimeString()}`}
-          </p>
+      <header className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <img
+            src="/logo.png"
+            alt="VPS Monitor logo"
+            className="h-11 w-11 shrink-0 rounded-lg object-cover"
+          />
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold text-gray-900">VPS Monitor</h1>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Auto-refreshes every {REFRESH_INTERVAL_MS / 1000}s
+              {lastUpdated && ` · last updated ${lastUpdated.toLocaleTimeString()}`}
+            </p>
+          </div>
         </div>
         <button
           onClick={() => { fetchSystem(); fetchProcesses(); fetchDbSizes(); }}
